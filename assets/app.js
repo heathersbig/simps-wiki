@@ -358,6 +358,101 @@ const FIREBASE_CONFIG = {
 		return Object.entries(s).map(([name, val]) => ({ name, val: clamp(val) }));
 	}
 
+	async function initInfoboxEditor(){
+		if(!pageKey.startsWith('entry:')) return;
+		const infobox = document.querySelector('.infobox');
+		if(!infobox) return;
+		const slug = pageKey.replace('entry:','');
+		const localKey = `simpsWiki.infobox.${pageKey}`;
+
+		const FIELDS = [
+			{ key:'show',    label:'Show / Bit',  placeholder:'e.g. Callbax, Senior Show, Radioprov…' },
+			{ key:'session', label:'Session',      placeholder:'e.g. Fall 2023, Week 4 Callbax…' },
+			{ key:'status',  label:'Status',       placeholder:'e.g. Active, Retired, Legendary, Deceased…' },
+			{ key:'aliases', label:'Also Known As', placeholder:'Other names or titles…' },
+		];
+
+		// Load saved data
+		let saved = null;
+		if(DB_URL){ try{ saved = await firebaseGet(`entries/${slug}/infobox`); }catch{} }
+		if(!saved){ try{ saved = JSON.parse(localStorage.getItem(localKey)); }catch{} }
+		let data = saved || {};
+
+		// Find insertion point — before the button row at bottom of infobox
+		const btnRow = infobox.querySelector('[data-bookmark-current]')?.closest('div');
+
+		const section = document.createElement('div');
+		section.className = 'ib-context';
+		if(btnRow) infobox.insertBefore(section, btnRow);
+		else infobox.appendChild(section);
+
+		let editing = false;
+
+		function render(){
+			const hasAny = FIELDS.some(f => data[f.key]);
+			section.innerHTML = `
+				<div class="ib-context-header">
+					<span class="ib-context-title">Context</span>
+					<button class="toolbar-button ib-edit-btn">${editing ? 'Done' : 'Edit'}</button>
+				</div>
+				${editing ? `
+					<div class="ib-fields">
+						${FIELDS.map(f => `
+							<div class="ib-field">
+								<label class="ib-label">${f.label}</label>
+								<input class="ib-input" data-key="${f.key}" value="${escapeHtml(data[f.key] || '')}" placeholder="${f.placeholder}">
+							</div>`).join('')}
+					</div>
+					<div class="ib-hint" id="ib-hint"></div>
+				` : hasAny ? `
+					<table class="meta-table ib-meta">
+						${FIELDS.filter(f => data[f.key]).map(f => `
+							<tr><th>${f.label}</th><td>${escapeHtml(data[f.key])}</td></tr>`).join('')}
+					</table>
+				` : `<p class="muted ib-empty">No context recorded. Click <strong>Edit</strong> to add the show or bit this came from.</p>`}
+			`;
+
+			section.querySelector('.ib-edit-btn').addEventListener('click', async () => {
+				if(editing){
+					section.querySelectorAll('.ib-input').forEach(el => {
+						data[el.dataset.key] = el.value.trim();
+					});
+					await saveInfobox();
+					editing = false;
+					render();
+				} else {
+					editing = true;
+					render();
+					section.querySelector('.ib-input')?.focus();
+				}
+			});
+		}
+
+		async function saveInfobox(){
+			const hint = document.getElementById('ib-hint');
+			if(hint) hint.textContent = 'Saving…';
+			localStorage.setItem(localKey, JSON.stringify(data));
+			if(DB_URL){
+				try{
+					await firebaseSet(`entries/${slug}/infobox`, data);
+					if(hint) hint.textContent = 'Saved — visible to all visitors.';
+				}catch{
+					if(hint) hint.textContent = 'Saved locally (sync failed).';
+				}
+			} else {
+				if(hint) hint.textContent = 'Saved locally.';
+			}
+		}
+
+		render();
+
+		if(DB_URL){
+			firebaseListen(`entries/${slug}/infobox`, val => {
+				if(val && !editing){ data = val; render(); }
+			});
+		}
+	}
+
 	async function initStatBlock(){
 		if(!pageKey.startsWith('entry:')) return;
 		const slug = pageKey.replace('entry:','');
@@ -1209,6 +1304,7 @@ const FIREBASE_CONFIG = {
 	initNotes();
 	await initFirebase();
 	initLoreEditor();
+	initInfoboxEditor();
 	initStatBlock();
 	initTierBadges();
 	bindButtons();

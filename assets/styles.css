@@ -491,6 +491,31 @@ textarea.lore-textarea{min-height:120px;overflow:hidden;resize:none}
 }
 .roll-output.rolling{border-color:var(--gold);box-shadow:0 0 20px var(--gold-glow)}
 
+/* ── Infobox context editor ─────────────────────────────── */
+.ib-context{margin-top:1rem;padding-top:.85rem;border-top:1px solid rgba(200,149,42,.2)}
+.ib-context-header{
+	display:flex;align-items:center;justify-content:space-between;
+	margin-bottom:.65rem;gap:.5rem;
+}
+.ib-context-title{
+	font-family:'Cinzel',serif;
+	font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;
+	color:var(--gold);
+}
+.ib-fields{display:grid;gap:.55rem}
+.ib-field{display:grid;gap:.2rem}
+.ib-label{font-size:.75rem;color:var(--gold);font-family:'Cinzel',serif;letter-spacing:.06em}
+.ib-input{
+	width:100%;padding:.42rem .6rem;
+	border-radius:8px;border:1px solid var(--line);
+	background:var(--bg-elev-2);color:var(--text);font-size:.88rem;
+	transition:border-color .15s;
+}
+.ib-input:focus{outline:none;border-color:var(--gold)}
+.ib-hint{font-size:.78rem;color:var(--muted);margin-top:.4rem;min-height:1em}
+.ib-meta tr:first-child th,.ib-meta tr:first-child td{border-top:none}
+.ib-empty{font-size:.88rem;margin:.25rem 0}
+
 /* ── Stat block ─────────────────────────────────────────── */
 .stat-block-panel{
 	padding:1.1rem 1.3rem;
