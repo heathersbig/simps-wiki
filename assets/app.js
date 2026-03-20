@@ -1004,6 +1004,54 @@ const FIREBASE_CONFIG = {
 		});
 	}
 
+	function getTier(rank){
+		if(rank <= 10)  return 'mythic';
+		if(rank <= 25)  return 'legendary';
+		if(rank <= 50)  return 'epic';
+		if(rank <= 80)  return 'elite';
+		return 'standard';
+	}
+	const TIER_LABELS = { mythic:'Mythic', legendary:'Legendary', epic:'Epic', elite:'Elite', standard:'Standard' };
+
+	function initTierBadges(){
+		document.querySelectorAll('.rank-num').forEach(el => {
+			const n = parseInt(el.textContent.trim(), 10);
+			if(!n) return;
+			const tier = getTier(n);
+			el.dataset.tier = tier;
+		});
+		// On entry pages: add tier label next to h1 if we have a rank
+		const rankCell = [...document.querySelectorAll('.meta-table td')].find(
+			(_, i, arr) => arr[i-1] && arr[i-1].textContent.trim() === 'Power Rank'
+		);
+		if(rankCell){
+			const match = rankCell.textContent.match(/#(\d+)/);
+			if(match){
+				const rank = parseInt(match[1], 10);
+				const tier = getTier(rank);
+				const h1 = document.querySelector('.page-header h1');
+				if(h1){
+					const badge = document.createElement('span');
+					badge.className = `tier-label ${tier}`;
+					badge.textContent = TIER_LABELS[tier];
+					h1.appendChild(badge);
+				}
+			}
+		}
+	}
+
+	// Wrap goRandom to add roll animation
+	const _goRandom = goRandom;
+	async function goRandom(kind){
+		const out = els.rollOutput;
+		if(out && kind){
+			out.classList.add('rolling');
+			out.textContent = '⚄ Rolling…';
+			setTimeout(() => out.classList.remove('rolling'), 1200);
+		}
+		await _goRandom(kind);
+	}
+
 	initTheme();
 	initFontScale();
 	recordRecent();
@@ -1013,6 +1061,7 @@ const FIREBASE_CONFIG = {
 	initNotes();
 	await initFirebase();
 	initLoreEditor();
+	initTierBadges();
 	bindButtons();
 	bindCategoryFilter();
 	bindKeyboard();
