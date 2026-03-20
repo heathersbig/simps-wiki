@@ -312,6 +312,147 @@ const FIREBASE_CONFIG = {
 		};
 	}
 
+	// ─── Stat block generation ───────────────────────────────────────────────
+	function slugHash(str){
+		let h = 2166136261;
+		for(let i = 0; i < str.length; i++){
+			h ^= str.charCodeAt(i);
+			h = Math.imul(h, 16777619) | 0;
+		}
+		return h >>> 0;
+	}
+	function seededInt(seed, idx, min, max){
+		let s = ((seed ^ (idx * 2654435761)) >>> 0);
+		s = ((s ^ (s >>> 16)) * 0x45d9f3b) >>> 0;
+		s = ((s ^ (s >>> 16)) * 0x45d9f3b) >>> 0;
+		return min + ((s ^ (s >>> 16)) % (max - min + 1));
+	}
+	function statMod(v){ const m = Math.floor((v - 10) / 2); return m >= 0 ? `+${m}` : `${m}`; }
+
+	function generateStatBlock(slug, entry){
+		const h = slugHash(slug);
+		const cats = entry.categoryLabels || [];
+		const rank = entry.rank;
+		const clamp = v => Math.min(20, Math.max(1, Math.round(v)));
+		let s = {
+			PWR: seededInt(h, 0, 5, 15),
+			CHO: seededInt(h, 1, 4, 18),
+			MEN: seededInt(h, 2, 4, 15),
+			VIB: seededInt(h, 3, 5, 18),
+			WIT: seededInt(h, 4, 4, 17),
+			BIT: seededInt(h, 5, 6, 20),
+		};
+		if(rank){
+			const p = clamp(20 - (rank - 1) * 13 / 118);
+			s.PWR = Math.max(s.PWR, p);
+			s.MEN = Math.max(s.MEN, clamp(p * 0.85));
+		}
+		if(cats.includes('Creatures'))           { s.MEN = clamp(s.MEN + seededInt(h,6,1,5)); }
+		if(cats.includes('Gangs & Factions'))    { s.PWR = clamp(s.PWR + seededInt(h,7,1,3)); s.CHO = clamp(s.CHO + seededInt(h,8,1,3)); }
+		if(cats.includes('Objects & Relics'))    { s.VIB = clamp(s.VIB + seededInt(h,9,1,4)); }
+		if(cats.includes('Kids'))                { s.CHO = clamp(s.CHO + 4); s.MEN = clamp(s.MEN - 2); }
+		if(cats.includes('Smartest Characters')) { s.WIT = clamp(s.WIT + seededInt(h,10,3,6)); }
+		if(cats.includes('Metaverse Variants'))  { s.CHO = clamp(s.CHO + seededInt(h,11,2,5)); }
+		if(cats.includes('Arenas & Locations'))  { s.VIB = clamp(s.VIB + seededInt(h,12,1,3)); }
+		if(cats.includes('Events & Timeline Splits')) { s.CHO = 20; s.MEN = clamp(s.MEN + 5); }
+		return Object.entries(s).map(([name, val]) => ({ name, val: clamp(val) }));
+	}
+
+	async function initStatBlock(){
+		if(!pageKey.startsWith('entry:')) return;
+		const slug = pageKey.replace('entry:','');
+		const data = await loadData();
+		const entry = data.entries[slug];
+		if(!entry) return;
+
+		const defaults = generateStatBlock(slug, entry);
+		const localKey = `simpsWiki.stats.${pageKey}`;
+		const grid = document.querySelector('.grid');
+		if(!grid) return;
+
+		// Load saved stats
+		let saved = null;
+		if(DB_URL){ try{ saved = await firebaseGet(`entries/${slug}/stats`); }catch{} }
+		if(!saved){ try{ saved = JSON.parse(localStorage.getItem(localKey)); }catch{} }
+		let stats = saved || defaults;
+
+		// Build panel
+		const panel = document.createElement('section');
+		panel.className = 'stat-block-panel span-12';
+		grid.prepend(panel);
+
+		const cats = (entry.categoryLabels || []).slice(0,3).join(' · ');
+
+		function render(editing){
+			panel.classList.toggle('editing', editing);
+			panel.innerHTML = `
+				<div class="sb-header">
+					<span class="sb-title">Entity Statistics</span>
+					<span class="sb-categories">${escapeHtml(cats)}</span>
+					<button class="toolbar-button sb-edit-btn">${editing ? 'Done' : 'Edit'}</button>
+				</div>
+				<div class="sb-stats">
+					${stats.map((s,i) => editing ? `
+						<div class="sb-cell">
+							<input class="sb-name-input" data-i="${i}" maxlength="5" value="${escapeHtml(s.name)}">
+							<input class="sb-score-input" data-i="${i}" type="number" min="1" max="20" value="${s.val}">
+						</div>` : `
+						<div class="sb-cell">
+							<div class="sb-name">${escapeHtml(s.name)}</div>
+							<div class="sb-score">${s.val}</div>
+							<div class="sb-mod">${statMod(s.val)}</div>
+						</div>`
+					).join('')}
+				</div>
+				<div class="sb-save-hint" id="sb-hint"></div>`;
+
+			panel.querySelector('.sb-edit-btn').addEventListener('click', () => {
+				if(editing){
+					// Collect edits
+					panel.querySelectorAll('.sb-name-input').forEach(el => {
+						stats[+el.dataset.i].name = el.value.trim().toUpperCase() || stats[+el.dataset.i].name;
+					});
+					panel.querySelectorAll('.sb-score-input').forEach(el => {
+						const v = Math.min(20, Math.max(1, parseInt(el.value) || 10));
+						stats[+el.dataset.i].val = v;
+					});
+					saveStats();
+					render(false);
+				} else {
+					render(true);
+				}
+			});
+		}
+
+		async function saveStats(){
+			const hint = document.getElementById('sb-hint');
+			if(hint) hint.textContent = 'Saving…';
+			localStorage.setItem(localKey, JSON.stringify(stats));
+			if(DB_URL){
+				try{
+					await firebaseSet(`entries/${slug}/stats`, stats);
+					if(hint) hint.textContent = 'Saved — visible to all visitors.';
+				}catch{
+					if(hint) hint.textContent = 'Saved locally (sync failed).';
+				}
+			} else {
+				if(hint) hint.textContent = 'Saved locally.';
+			}
+		}
+
+		render(false);
+
+		// Live sync
+		if(DB_URL){
+			firebaseListen(`entries/${slug}/stats`, val => {
+				if(val && !panel.classList.contains('editing')){
+					stats = val;
+					render(false);
+				}
+			});
+		}
+	}
+
 	// ─── Default entry descriptions ──────────────────────────────────────────
 	const LORE_DEFAULTS = {
 		// Power Ranking
@@ -1068,6 +1209,7 @@ const FIREBASE_CONFIG = {
 	initNotes();
 	await initFirebase();
 	initLoreEditor();
+	initStatBlock();
 	initTierBadges();
 	bindButtons();
 	bindCategoryFilter();

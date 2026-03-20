@@ -491,6 +491,96 @@ textarea.lore-textarea{min-height:120px;overflow:hidden;resize:none}
 }
 .roll-output.rolling{border-color:var(--gold);box-shadow:0 0 20px var(--gold-glow)}
 
+/* ── Stat block ─────────────────────────────────────────── */
+.stat-block-panel{
+	padding:1.1rem 1.3rem;
+	border:1px solid rgba(200,149,42,.4);
+	border-radius:var(--radius);
+	background:linear-gradient(160deg, var(--bg-elev) 0%, rgba(200,149,42,.07) 100%);
+	box-shadow:var(--shadow), inset 0 0 40px rgba(200,149,42,.04);
+	position:relative;
+}
+.sb-header{
+	display:flex;
+	align-items:center;
+	justify-content:space-between;
+	margin-bottom:.85rem;
+	border-bottom:1px solid rgba(200,149,42,.25);
+	padding-bottom:.6rem;
+	gap:1rem;
+}
+.sb-title{
+	font-family:'Cinzel',serif;
+	font-size:.8rem;
+	letter-spacing:.12em;
+	text-transform:uppercase;
+	color:var(--gold-bright);
+}
+.sb-categories{font-size:.8rem;color:var(--muted)}
+.sb-edit-btn{margin-left:auto}
+.sb-stats{
+	display:grid;
+	grid-template-columns:repeat(6,1fr);
+	gap:.5rem;
+}
+@media(max-width:600px){.sb-stats{grid-template-columns:repeat(3,1fr)}}
+.sb-cell{
+	text-align:center;
+	padding:.55rem .3rem;
+	border-radius:10px;
+	border:1px solid var(--line);
+	background:var(--bg-elev-2);
+	transition:border-color .15s, box-shadow .15s;
+}
+.sb-cell:hover{border-color:rgba(200,149,42,.35)}
+.sb-name{
+	font-family:'Cinzel',serif;
+	font-size:.7rem;
+	letter-spacing:.1em;
+	color:var(--gold);
+	margin-bottom:.3rem;
+}
+.sb-score{
+	font-family:'Cinzel',serif;
+	font-size:1.55rem;
+	font-weight:700;
+	line-height:1;
+	color:var(--text);
+}
+.sb-mod{
+	font-size:.8rem;
+	color:var(--muted);
+	margin-top:.2rem;
+}
+/* Edit mode */
+.stat-block-panel.editing .sb-cell{border-color:rgba(200,149,42,.4);background:rgba(200,149,42,.07)}
+.sb-cell input{
+	width:100%;
+	background:transparent;
+	border:none;
+	outline:none;
+	text-align:center;
+	color:var(--text);
+	padding:0;
+}
+.sb-name-input{
+	font-family:'Cinzel',serif;
+	font-size:.7rem;
+	letter-spacing:.1em;
+	color:var(--gold);
+	text-transform:uppercase;
+}
+.sb-score-input{
+	font-family:'Cinzel',serif;
+	font-size:1.55rem;
+	font-weight:700;
+	-moz-appearance:textfield;
+	appearance:textfield;
+}
+.sb-score-input::-webkit-inner-spin-button,
+.sb-score-input::-webkit-outer-spin-button{-webkit-appearance:none}
+.sb-save-hint{font-size:.8rem;color:var(--muted);margin-top:.6rem;min-height:1em}
+
 /* ── Footer ─────────────────────────────────────────────── */
 .site-footer{
 	margin-top:1.5rem;
