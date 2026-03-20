@@ -692,3 +692,106 @@ kbd{
 	.span-8,.span-4,.span-6,.span-12{grid-column:span 1}
 	.page-header h1,.hero h1{font-size:1.7rem}
 }
+
+/* ── Add Entry Modal ────────────────────────────────────── */
+.add-entry-overlay{
+	position:fixed;inset:0;
+	background:rgba(0,0,0,.72);
+	display:flex;align-items:center;justify-content:center;
+	z-index:200;
+	opacity:0;pointer-events:none;
+	transition:opacity .18s;
+}
+.add-entry-overlay.open{opacity:1;pointer-events:all}
+.add-entry-modal{
+	background:var(--bg-elev-2);
+	border:1px solid var(--gold-dim);
+	border-radius:18px;
+	padding:2rem;
+	width:min(92vw,560px);
+	max-height:88vh;
+	overflow-y:auto;
+}
+.add-entry-modal h2{
+	font-family:'Cinzel','Palatino Linotype',serif;
+	color:var(--gold);
+	margin:0 0 1.25rem;
+	font-size:1.4rem;
+}
+.ae-field{margin-bottom:1.1rem}
+.ae-label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.35rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.ae-input,.ae-textarea,.ae-select{
+	width:100%;box-sizing:border-box;
+	padding:.6rem .85rem;
+	background:var(--bg-elev-3);
+	border:1px solid var(--line);
+	border-radius:10px;
+	color:var(--text);
+	font-size:.97rem;
+	font-family:inherit;
+	transition:border-color .15s;
+}
+.ae-input:focus,.ae-textarea:focus,.ae-select:focus{
+	outline:none;border-color:var(--gold);
+}
+.ae-textarea{resize:vertical;min-height:90px}
+.ae-checkbox-group{display:flex;flex-wrap:wrap;gap:.5rem}
+.ae-checkbox-label{
+	display:flex;align-items:center;gap:.4rem;
+	padding:.3rem .7rem;
+	background:var(--bg-elev-3);
+	border:1px solid var(--line);
+	border-radius:8px;
+	font-size:.88rem;
+	cursor:pointer;
+	transition:border-color .15s, background .15s;
+}
+.ae-checkbox-label:hover{border-color:var(--gold)}
+.ae-checkbox-label input[type=checkbox]:checked + span{color:var(--gold)}
+.ae-checkbox-label input[type=checkbox]:checked ~ *{color:var(--gold)}
+.ae-checkbox-label:has(input:checked){border-color:var(--gold);background:rgba(200,149,42,.08)}
+.ae-row{display:flex;gap:1rem}
+.ae-row .ae-field{flex:1}
+.ae-hint{font-size:.82rem;color:var(--muted);margin-top:.35rem}
+.ae-save-status{margin-top:.75rem;font-size:.88rem;color:var(--gold-bright);min-height:1.2em}
+.ae-actions{display:flex;gap:.75rem;margin-top:1.25rem;justify-content:flex-end}
+
+/* ── User entry badge ─── */
+.badge.user-added{background:rgba(200,149,42,.18);color:var(--gold-bright);border:1px solid var(--gold-dim)}
+.rank-row.user-entry .rank-num{background:linear-gradient(135deg,var(--gold-dim),var(--gold));color:#1a0e00}
+
+/* ── RPG Guide page ─────────────────────────────────────── */
+.rpg-guide-section{margin-bottom:2.5rem}
+.rpg-guide-section h2{
+	font-family:'Cinzel','Palatino Linotype',serif;
+	color:var(--gold-bright);
+	font-size:1.35rem;
+	border-bottom:1px solid var(--line);
+	padding-bottom:.5rem;
+	margin-bottom:1rem;
+}
+.stat-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem;margin-top:.75rem}
+.stat-legend-item{
+	padding:.75rem 1rem;
+	background:var(--bg-elev-2);
+	border:1px solid var(--line);
+	border-radius:10px;
+}
+.stat-legend-item strong{color:var(--gold);display:block;margin-bottom:.2rem;font-family:'Cinzel',serif}
+.stat-legend-item span{font-size:.88rem;color:var(--muted)}
+.tier-table{width:100%;border-collapse:collapse;margin-top:.75rem}
+.tier-table th,.tier-table td{padding:.55rem .9rem;text-align:left;border-bottom:1px solid var(--line);font-size:.9rem}
+.tier-table th{color:var(--gold);font-family:'Cinzel',serif;font-weight:600}
+.category-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.75rem;margin-top:.75rem}
+.category-card{
+	padding:.85rem 1rem;
+	background:var(--bg-elev-2);
+	border:1px solid var(--line);
+	border-radius:12px;
+	text-decoration:none;
+	color:var(--text);
+	transition:border-color .15s;
+}
+.category-card:hover{border-color:var(--gold);text-decoration:none}
+.category-card strong{color:var(--gold-bright);display:block;margin-bottom:.25rem}
+.category-card span{font-size:.86rem;color:var(--muted)}

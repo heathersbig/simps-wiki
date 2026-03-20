@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Community Entry · SImps TTRPG Wiki</title>
+	<link rel="stylesheet" href="../../assets/styles.css">
+</head>
+<body data-base="../.." data-page-path="pages/entries/_user.html" data-page-title="Community Entry" data-page-key="entry:_user" data-theme="dark">
+	<div class="layout">
+		<aside class="sidebar" id="sidebar">
+			<div class="brand-row">
+				<a class="site-title" href="../../index.html">SImps TTRPG Wiki</a>
+				<button class="icon-button mobile-nav-close" data-close-sidebar aria-label="Close navigation">×</button>
+			</div>
+			<p class="site-subtitle">A fully unstable encyclopedia of ranked beings, gangs, relics, creatures, variants, arenas, and taxonomy.</p>
+			<div class="sidebar-actions">
+				<button class="toolbar-button" data-open-search>Search</button>
+				<button class="toolbar-button" data-random-page>Random</button>
+			</div>
+			<section class="sidebar-section">
+				<h3>Bookmarks</h3>
+				<div id="bookmark-list" class="bookmark-list empty-state">Loading bookmarks…</div>
+			</section>
+			<nav class="wiki-tree" id="sidebar-tree" aria-label="Wiki contents">
+				<div class="empty-state">Loading contents…</div>
+			</nav>
+		</aside>
+
+		<div class="main">
+			<header class="topbar">
+				<div class="top-actions">
+					<button class="icon-button mobile-nav-toggle" data-mobile-nav aria-label="Open navigation">☰</button>
+					<button class="toolbar-button" data-open-search>Search</button>
+					<button class="toolbar-button" data-random-page>Random</button>
+				</div>
+				<div class="top-actions">
+					<button class="toolbar-button" data-export-local>Export</button>
+					<button class="toolbar-button" data-import-local>Import</button>
+					<input type="file" id="import-file" class="hidden" accept="application/json">
+					<button class="icon-button" data-font-down aria-label="Decrease font size">A-</button>
+					<button class="icon-button" data-font-up aria-label="Increase font size">A+</button>
+					<button class="icon-button" data-theme-toggle aria-label="Toggle theme">☼ ☾</button>
+					<button class="icon-button" data-open-help aria-label="Keyboard shortcuts">?</button>
+				</div>
+			</header>
+
+			<main class="main-inner">
+				<section class="panel">
+					<h3>Recent tabs</h3>
+					<div id="recent-tabs" class="recent-tabs empty-state">Loading recent pages…</div>
+				</section>
+
+				<div id="user-entry-content">
+					<section class="page-header">
+						<div class="breadcrumbs"><a href="../../index.html">Home</a> / Community Entry</div>
+						<h1 id="ue-title">Loading…</h1>
+						<p id="ue-summary"></p>
+						<div class="related-links" id="ue-badges"></div>
+					</section>
+
+					<div class="grid">
+						<section class="panel span-8" id="ue-lore-panel">
+							<h3>Lore</h3>
+							<div id="ue-lore-body" class="lore-rendered"><span class="muted">No lore recorded yet.</span></div>
+							<div id="ue-lore-edit-wrap" style="margin-top:1rem">
+								<button class="toolbar-button" id="ue-lore-edit-btn">Edit lore</button>
+								<textarea id="ue-lore-textarea" class="lore-textarea" style="display:none" placeholder="Write lore here. **Bold**, *italic*, # headings, - lists supported."></textarea>
+								<button class="toolbar-button" id="ue-lore-save-btn" style="display:none">Save lore</button>
+								<div class="lore-hint" id="ue-lore-hint"></div>
+							</div>
+						</section>
+
+						<aside class="infobox span-4" id="ue-infobox">
+							<h3>Infobox</h3>
+							<table class="meta-table" id="ue-meta-table"></table>
+							<div id="ue-ib-context"></div>
+							<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem">
+								<button class="toolbar-button" data-bookmark-current>☆ Bookmark</button>
+								<button class="toolbar-button" data-print-page>🖨 Print</button>
+								<button class="toolbar-button" id="ue-delete-btn" style="color:var(--muted)">Delete entry</button>
+							</div>
+						</aside>
+
+						<section class="note-panel span-12">
+							<h3>GM / personal notes</h3>
+							<textarea id="page-notes" class="page-notes" placeholder="Local notes for encounters, jokes, stats, lore expansions, whatever deranged continuity patch this page needs."></textarea>
+							<div class="note-hint" id="note-status">Saved locally in your browser.</div>
+						</section>
+					</div>
+				</div>
+
+				<footer class="site-footer">
+					Built for glorious overclassification, low-level continuity panic, and finding out which arena the Apple Police should fight in next.
+				</footer>
+			</main>
+		</div>
+	</div>
+
+	<div class="overlay" id="search-overlay">
+		<div class="search-modal">
+			<div class="modal-head">
+				<h2>Search the wiki</h2>
+				<button class="icon-button" data-close-overlay aria-label="Close search">×</button>
+			</div>
+			<input class="search-box" id="search-input" type="search" placeholder="Search titles, categories, summaries…">
+			<div class="search-results" id="search-results">
+				<div class="empty-state">Search titles, categories, or summaries.</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="overlay" id="help-overlay">
+		<div class="help-modal">
+			<div class="modal-head">
+				<h2>Keyboard shortcuts</h2>
+				<button class="icon-button" data-close-overlay aria-label="Close shortcuts">×</button>
+			</div>
+			<div class="help-grid">
+				<div class="card"><strong><kbd>Ctrl</kbd> + <kbd>K</kbd></strong><p>Open search</p></div>
+				<div class="card"><strong><kbd>/</kbd></strong><p>Focus search quickly</p></div>
+				<div class="card"><strong><kbd>B</kbd></strong><p>Bookmark current page</p></div>
+				<div class="card"><strong><kbd>R</kbd></strong><p>Random page</p></div>
+				<div class="card"><strong><kbd>?</kbd></strong><p>Open this help panel</p></div>
+				<div class="card"><strong><kbd>Esc</kbd></strong><p>Close overlays or mobile nav</p></div>
+			</div>
+		</div>
+	</div>
+
+	<script src="../../assets/app.js"></script>
+	<script>
+	// Load community entry from Firebase after app.js sets up DB_URL
+	(function(){
+		const params = new URLSearchParams(location.search);
+		const id = params.get('id');
+		if(!id){
+			document.getElementById('ue-title').textContent = 'Entry not found';
+			return;
+		}
+
+		// Update page metadata so recent-tabs / bookmarks work
+		document.body.dataset.pageKey = 'user-entry:' + id;
+		document.body.dataset.pageTitle = id;
+
+		function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+		function mdInline(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/`(.+?)`/g,'<code>$1</code>'); }
+		function renderMd(text){
+			if(!text||!text.trim()) return '';
+			return text.split(/\n\n+/).map(b=>{
+				const t=b.trim();
+				if(!t) return '';
+				if(/^#{1,2} /.test(t)){ const lv=t.startsWith('## ')?4:3; return `<h${lv}>${mdInline(t.replace(/^#{1,2} /,''))}</h${lv}>`; }
+				if(/^[-*] /m.test(t)){ return '<ul>'+t.split('\n').filter(l=>l.trim()).map(l=>`<li>${mdInline(l.replace(/^[-*] /,''))}</li>`).join('')+'</ul>'; }
+				return `<p>${mdInline(t.replace(/\n/g,'<br>'))}</p>`;
+			}).join('');
+		}
+
+		function waitForDB(cb, tries){
+			tries = tries || 0;
+			if(typeof FIREBASE_CONFIG !== 'undefined'){
+				const dbUrl = FIREBASE_CONFIG ? (FIREBASE_CONFIG.databaseURL || `https://${FIREBASE_CONFIG.projectId}-default-rtdb.firebaseio.com`) : null;
+				cb(dbUrl);
+			} else if(tries < 30){
+				setTimeout(() => waitForDB(cb, tries + 1), 100);
+			}
+		}
+
+		waitForDB(function(DB_URL){
+			if(!DB_URL){
+				document.getElementById('ue-title').textContent = 'Database not configured';
+				return;
+			}
+
+			fetch(`${DB_URL}/user_entries/${encodeURIComponent(id)}.json`)
+				.then(r => r.json())
+				.then(entry => {
+					if(!entry){ document.getElementById('ue-title').textContent = 'Entry not found'; return; }
+
+					document.title = escHtml(entry.name) + ' · SImps TTRPG Wiki';
+					document.body.dataset.pageTitle = entry.name;
+
+					document.getElementById('ue-title').textContent = entry.name;
+					document.getElementById('ue-summary').textContent = entry.summary || '';
+
+					const badges = document.getElementById('ue-badges');
+					(entry.categories||[]).forEach(c => {
+						const s = document.createElement('span');
+						s.className = 'badge';
+						s.textContent = c;
+						badges.appendChild(s);
+					});
+					const comm = document.createElement('span');
+					comm.className = 'badge user-added';
+					comm.textContent = 'Community added';
+					badges.appendChild(comm);
+
+					// Meta table
+					const tbl = document.getElementById('ue-meta-table');
+					const rows = [
+						['Page Type', 'Community Entry'],
+						entry.rank ? ['Power Rank', '#' + entry.rank] : null,
+						['Categories', (entry.categories||[]).join(', ') || '—'],
+					].filter(Boolean);
+					tbl.innerHTML = rows.map(([k,v]) => `<tr><th>${escHtml(k)}</th><td>${escHtml(v)}</td></tr>`).join('');
+
+					// Lore
+					const loreBody = document.getElementById('ue-lore-body');
+					const loreTA = document.getElementById('ue-lore-textarea');
+					const loreEditBtn = document.getElementById('ue-lore-edit-btn');
+					const loreSaveBtn = document.getElementById('ue-lore-save-btn');
+					const loreHint = document.getElementById('ue-lore-hint');
+
+					let currentLore = entry.lore || '';
+					function showLore(){ loreBody.innerHTML = currentLore ? renderMd(currentLore) : '<span class="muted">No lore recorded yet.</span>'; }
+					showLore();
+
+					loreEditBtn.addEventListener('click', () => {
+						loreTA.value = currentLore;
+						loreTA.style.display = '';
+						loreSaveBtn.style.display = '';
+						loreEditBtn.style.display = 'none';
+						loreTA.style.height = 'auto';
+						loreTA.style.height = loreTA.scrollHeight + 'px';
+					});
+					loreSaveBtn.addEventListener('click', () => {
+						currentLore = loreTA.value.trim();
+						loreHint.textContent = 'Saving…';
+						fetch(`${DB_URL}/user_entries/${encodeURIComponent(id)}/lore.json`, {
+							method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify(currentLore)
+						}).then(() => {
+							loreHint.textContent = 'Saved — visible to all visitors.';
+							showLore();
+							loreTA.style.display = 'none';
+							loreSaveBtn.style.display = 'none';
+							loreEditBtn.style.display = '';
+						}).catch(() => { loreHint.textContent = 'Save failed.'; });
+					});
+				})
+				.catch(() => { document.getElementById('ue-title').textContent = 'Failed to load entry.'; });
+
+			// Delete button
+			document.getElementById('ue-delete-btn').addEventListener('click', () => {
+				if(!confirm('Delete this community entry permanently?')) return;
+				fetch(`${DB_URL}/user_entries/${encodeURIComponent(id)}.json`, { method:'DELETE' })
+					.then(() => { location.href = '../../index.html'; })
+					.catch(() => { alert('Delete failed.'); });
+			});
+		});
+	})();
+	</script>
+</body>
+</html>

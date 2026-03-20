@@ -104,6 +104,13 @@ const FIREBASE_CONFIG = {
 		home.textContent = 'Welcome';
 		wrapper.appendChild(home);
 
+		const rpgLink = document.createElement('a');
+		rpgLink.href = pathify('pages/rpg-guide.html');
+		rpgLink.className = 'tree-home' + (currentPath === 'pages/rpg-guide.html' ? ' current' : '');
+		rpgLink.textContent = '⚄ RPG Guide';
+		rpgLink.style.color = 'var(--gold)';
+		wrapper.appendChild(rpgLink);
+
 		data.categories.forEach(cat => {
 			const details = document.createElement('details');
 			details.className = 'tree-group';
@@ -221,16 +228,39 @@ const FIREBASE_CONFIG = {
 		const results = pageIndex.filter(page => {
 			const hay = `${page.title} ${page.summary || ''} ${(page.categories || []).join(' ')}`.toLowerCase();
 			return hay.includes(q);
-		}).slice(0, 35);
-		if(!results.length){
+		}).slice(0, 30);
+
+		// Also search community entries from Firebase
+		let communityResults = [];
+		if(DB_URL){
+			try{
+				const userEntries = await firebaseGet('user_entries');
+				if(userEntries){
+					communityResults = Object.values(userEntries).filter(e => {
+						const hay = `${e.name||''} ${e.summary||''} ${(e.categories||[]).join(' ')}`.toLowerCase();
+						return hay.includes(q);
+					}).slice(0, 8).map(e => ({
+						title: e.name,
+						summary: e.summary,
+						categories: e.categories || [],
+						path: `pages/entries/_user.html?id=${encodeURIComponent(e.slug)}`,
+						userAdded: true,
+					}));
+				}
+			}catch{}
+		}
+
+		const allResults = [...results, ...communityResults];
+		if(!allResults.length){
 			els.searchResults.innerHTML = '<div class="empty-state">Nothing matched. Which honestly feels impossible, but here we are.</div>';
 			return;
 		}
-		results.forEach(result => {
+		allResults.forEach(result => {
 			const wrap = document.createElement('a');
 			wrap.className = 'search-result';
 			wrap.href = pathify(result.path);
-			wrap.innerHTML = `<h3>${escapeHtml(result.title)}</h3><div class="mini-meta">${(result.categories || []).map(c => `<span class="badge">${escapeHtml(c)}</span>`).join('')}</div><p>${escapeHtml(result.summary || '')}</p>`;
+			const commBadge = result.userAdded ? '<span class="badge user-added">Community</span>' : '';
+			wrap.innerHTML = `<h3>${escapeHtml(result.title)}</h3><div class="mini-meta">${(result.categories || []).map(c => `<span class="badge">${escapeHtml(c)}</span>`).join('')}${commBadge}</div><p>${escapeHtml(result.summary || '')}</p>`;
 			els.searchResults.appendChild(wrap);
 		});
 	}
@@ -1118,6 +1148,25 @@ const FIREBASE_CONFIG = {
 				})
 				.map(entry => ({ title: entry.title, path: entry.path, summary: entry.summary, categories: entry.categoryLabels }));
 		}
+		// Include community entries in random pool
+		if(DB_URL){
+			try{
+				const userEntries = await firebaseGet('user_entries');
+				if(userEntries){
+					const communityPool = Object.values(userEntries)
+						.filter(e => {
+							if(!kind) return true;
+							if(kind === 'character') return e.categories && e.categories.includes('Power Ranking');
+							if(kind === 'arena') return e.categories && e.categories.includes('Arenas & Locations');
+							if(kind === 'object') return e.categories && e.categories.includes('Objects & Relics');
+							if(kind === 'metaverse') return e.categories && e.categories.includes('Metaverse Variants');
+							return true;
+						})
+						.map(e => ({ title: e.name, path: `pages/entries/_user.html?id=${encodeURIComponent(e.slug)}`, summary: e.summary }));
+					pool = [...pool, ...communityPool];
+				}
+			}catch{}
+		}
 		const pick = pool[Math.floor(Math.random() * pool.length)];
 		if(!pick) return;
 		if(els.rollOutput && kind){
@@ -1295,6 +1344,205 @@ const FIREBASE_CONFIG = {
 		}
 	}
 
+	// ─── Add Entry feature ──────────────────────────────────────────────────
+	const ENTRY_CATEGORIES = [
+		'Power Ranking','Creatures','Gangs & Factions','Objects & Relics',
+		'Kids','Metaverse Variants','Events','Arenas & Locations',
+		'Photo Categories','Names & Titles','Smartest Characters',
+	];
+
+	function makeSlug(name){
+		return name.toLowerCase()
+			.replace(/['']/g, '')
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '');
+	}
+
+	function initAddEntryButton(){
+		// Inject overlay HTML once
+		if(document.getElementById('add-entry-overlay')) return;
+
+		const overlay = document.createElement('div');
+		overlay.className = 'add-entry-overlay';
+		overlay.id = 'add-entry-overlay';
+		overlay.innerHTML = `
+			<div class="add-entry-modal" role="dialog" aria-modal="true" aria-labelledby="ae-title">
+				<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+					<h2 id="ae-title" style="margin:0">✦ Add a New Entry</h2>
+					<button class="icon-button" id="ae-close" aria-label="Close">×</button>
+				</div>
+				<div class="ae-field">
+					<label class="ae-label" for="ae-name">Entry Name *</label>
+					<input class="ae-input" id="ae-name" type="text" placeholder="Name of the character, creature, object, place…" autocomplete="off">
+				</div>
+				<div class="ae-field">
+					<label class="ae-label">Categories</label>
+					<div class="ae-checkbox-group" id="ae-cats">
+						${ENTRY_CATEGORIES.map(c => `<label class="ae-checkbox-label"><input type="checkbox" value="${escapeHtml(c)}"><span>${escapeHtml(c)}</span></label>`).join('')}
+					</div>
+				</div>
+				<div id="ae-rank-field" class="ae-field" style="display:none">
+					<label class="ae-label" for="ae-rank">Power Ranking Position (1 = top)</label>
+					<input class="ae-input" id="ae-rank" type="number" min="1" placeholder="Leave blank to place at the end">
+					<div class="ae-hint">Entering a rank will insert this character at that position. Existing characters shift down.</div>
+				</div>
+				<div class="ae-field">
+					<label class="ae-label" for="ae-summary">Brief Description</label>
+					<textarea class="ae-textarea" id="ae-summary" placeholder="One or two sentences. What is this thing? Why does it exist?"></textarea>
+				</div>
+				<div class="ae-field">
+					<label class="ae-label" for="ae-lore">Full Lore (optional, markdown supported)</label>
+					<textarea class="ae-textarea" id="ae-lore" style="min-height:130px" placeholder="**Bold** and *italic* supported. Full backstory, encounter notes, whatever it needs."></textarea>
+				</div>
+				<div class="ae-save-status" id="ae-status"></div>
+				<div class="ae-actions">
+					<button class="toolbar-button" id="ae-cancel">Cancel</button>
+					<button class="big-button" id="ae-submit">Create Entry</button>
+				</div>
+			</div>`;
+		document.body.appendChild(overlay);
+
+		// Inject "+ Add Entry" button into topbar right section
+		const topbarRight = document.querySelector('.topbar .top-actions:last-child');
+		if(topbarRight){
+			const addBtn = document.createElement('button');
+			addBtn.className = 'toolbar-button';
+			addBtn.textContent = '+ Add Entry';
+			addBtn.addEventListener('click', openAddEntry);
+			topbarRight.insertBefore(addBtn, topbarRight.firstChild);
+		}
+
+		// Toggle rank field when Power Ranking checkbox changes
+		const catGroup = document.getElementById('ae-cats');
+		catGroup.addEventListener('change', () => {
+			const checked = [...catGroup.querySelectorAll('input:checked')].map(el => el.value);
+			document.getElementById('ae-rank-field').style.display = checked.includes('Power Ranking') ? '' : 'none';
+		});
+
+		// Close handlers
+		document.getElementById('ae-close').addEventListener('click', closeAddEntry);
+		document.getElementById('ae-cancel').addEventListener('click', closeAddEntry);
+		overlay.addEventListener('click', e => { if(e.target === overlay) closeAddEntry(); });
+
+		document.getElementById('ae-submit').addEventListener('click', submitEntry);
+	}
+
+	function openAddEntry(){
+		const overlay = document.getElementById('add-entry-overlay');
+		if(!overlay) return;
+		overlay.classList.add('open');
+		document.getElementById('ae-name').focus();
+		document.getElementById('ae-status').textContent = '';
+	}
+	function closeAddEntry(){
+		const overlay = document.getElementById('add-entry-overlay');
+		if(overlay) overlay.classList.remove('open');
+	}
+
+	async function submitEntry(){
+		const name = document.getElementById('ae-name').value.trim();
+		if(!name){ document.getElementById('ae-name').focus(); return; }
+
+		const cats = [...document.querySelectorAll('#ae-cats input:checked')].map(el => el.value);
+		const rank = parseInt(document.getElementById('ae-rank').value) || null;
+		const summary = document.getElementById('ae-summary').value.trim();
+		const lore = document.getElementById('ae-lore').value.trim();
+
+		const slug = 'user-' + makeSlug(name);
+		const entry = {
+			slug,
+			name,
+			categories: cats,
+			rank: cats.includes('Power Ranking') ? rank : null,
+			summary: summary || `A community-added entry: ${name}.`,
+			lore: lore || '',
+			addedBy: 'community',
+			addedAt: Date.now(),
+		};
+
+		const status = document.getElementById('ae-status');
+		status.textContent = 'Saving…';
+
+		try{
+			await firebaseSet(`user_entries/${slug}`, entry);
+			if(entry.rank && DB_URL){
+				// Store rank override separately so category pages can pick it up
+				await firebaseSet(`user_rank_inserts/${slug}`, { slug, name, rank });
+			}
+			status.textContent = '✓ Entry created! Redirecting to its page…';
+			setTimeout(() => {
+				closeAddEntry();
+				location.href = `${base}/pages/entries/_user.html?id=${encodeURIComponent(slug)}`;
+			}, 900);
+		}catch(err){
+			status.textContent = 'Error saving entry — check console.';
+		}
+	}
+
+	// ─── Inject user entries into category/power-ranking list ───────────────
+	async function injectUserEntries(){
+		if(!DB_URL) return;
+		const pageKeyLower = pageKey.toLowerCase();
+		const isPowerRanking = pageKeyLower.includes('power-ranking');
+		const isCategory = pageKey.startsWith('category:');
+		if(!isCategory && pageKey !== 'home') return;
+
+		let userEntries = null;
+		try{ userEntries = await firebaseGet('user_entries'); }catch{ return; }
+		if(!userEntries) return;
+
+		const entries = Object.values(userEntries);
+		if(!entries.length) return;
+
+		// Filter to entries relevant to this category page
+		let relevant = entries;
+		if(isPowerRanking){
+			relevant = entries.filter(e => e.categories && e.categories.includes('Power Ranking'));
+		} else if(isCategory){
+			const catKey = pageKey.replace('category:','');
+			relevant = entries.filter(e => {
+				if(!e.categories) return false;
+				return e.categories.some(c => makeSlug(c) === catKey);
+			});
+		}
+		if(!relevant.length) return;
+
+		const rankList = document.querySelector('.rank-list');
+		if(!rankList) return;
+
+		const entryPath = `${base}/pages/entries/_user.html?id=`;
+
+		relevant.forEach(entry => {
+			const row = document.createElement('a');
+			row.className = 'rank-row user-entry';
+			row.href = `${entryPath}${encodeURIComponent(entry.slug)}`;
+			const rankDisplay = entry.rank ? `<div class="rank-num">${entry.rank}*</div>` : '<div class="rank-num">–</div>';
+			row.innerHTML = `
+				${rankDisplay}
+				<div>
+					<strong>${escapeHtml(entry.name)}</strong>
+					<p>${escapeHtml(entry.summary || '')}</p>
+					<div class="mini-meta">
+						${(entry.categories||[]).map(c => `<span class="badge">${escapeHtml(c)}</span>`).join('')}
+						<span class="badge user-added">Community added</span>
+					</div>
+				</div>`;
+
+			// Insert at rank position if possible, else append
+			if(isPowerRanking && entry.rank){
+				const rows = [...rankList.querySelectorAll('.rank-row')];
+				const insertBefore = rows.find(r => {
+					const n = parseInt(r.querySelector('.rank-num')?.textContent);
+					return n && n >= entry.rank;
+				});
+				if(insertBefore) rankList.insertBefore(row, insertBefore);
+				else rankList.appendChild(row);
+			} else {
+				rankList.appendChild(row);
+			}
+		});
+	}
+
 	initTheme();
 	initFontScale();
 	recordRecent();
@@ -1307,6 +1555,8 @@ const FIREBASE_CONFIG = {
 	initInfoboxEditor();
 	initStatBlock();
 	initTierBadges();
+	initAddEntryButton();
+	injectUserEntries();
 	bindButtons();
 	bindCategoryFilter();
 	bindKeyboard();

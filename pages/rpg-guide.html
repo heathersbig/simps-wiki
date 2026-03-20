@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>RPG Guide · SImps TTRPG Wiki</title>
+	<link rel="stylesheet" href="../assets/styles.css">
+</head>
+<body data-base=".." data-page-path="pages/rpg-guide.html" data-page-title="RPG Guide" data-page-key="rpg-guide" data-theme="dark">
+	<div class="layout">
+		<aside class="sidebar" id="sidebar">
+			<div class="brand-row">
+				<a class="site-title" href="../index.html">SImps TTRPG Wiki</a>
+				<button class="icon-button mobile-nav-close" data-close-sidebar aria-label="Close navigation">×</button>
+			</div>
+			<p class="site-subtitle">A fully unstable encyclopedia of ranked beings, gangs, relics, creatures, variants, arenas, and taxonomy.</p>
+			<div class="sidebar-actions">
+				<button class="toolbar-button" data-open-search>Search</button>
+				<button class="toolbar-button" data-random-page>Random</button>
+			</div>
+			<section class="sidebar-section">
+				<h3>Bookmarks</h3>
+				<div id="bookmark-list" class="bookmark-list empty-state">Loading bookmarks…</div>
+			</section>
+			<nav class="wiki-tree" id="sidebar-tree" aria-label="Wiki contents">
+				<div class="empty-state">Loading contents…</div>
+			</nav>
+		</aside>
+
+		<div class="main">
+			<header class="topbar">
+				<div class="top-actions">
+					<button class="icon-button mobile-nav-toggle" data-mobile-nav aria-label="Open navigation">☰</button>
+					<button class="toolbar-button" data-open-search>Search</button>
+					<button class="toolbar-button" data-random-page>Random</button>
+				</div>
+				<div class="top-actions">
+					<button class="toolbar-button" data-export-local>Export</button>
+					<button class="toolbar-button" data-import-local>Import</button>
+					<input type="file" id="import-file" class="hidden" accept="application/json">
+					<button class="icon-button" data-font-down aria-label="Decrease font size">A-</button>
+					<button class="icon-button" data-font-up aria-label="Increase font size">A+</button>
+					<button class="icon-button" data-theme-toggle aria-label="Toggle theme">☼ ☾</button>
+					<button class="icon-button" data-open-help aria-label="Keyboard shortcuts">?</button>
+				</div>
+			</header>
+
+			<main class="main-inner">
+				<section class="panel">
+					<h3>Recent tabs</h3>
+					<div id="recent-tabs" class="recent-tabs empty-state">Loading recent pages…</div>
+				</section>
+
+				<section class="page-header">
+					<div class="breadcrumbs"><a href="../index.html">Home</a> / RPG Guide</div>
+					<h1>SImps TTRPG — How to Play</h1>
+					<p>Rules, categories, stat blocks, and the taxonomy of a universe that defies sensible classification.</p>
+					<div class="related-links">
+						<span class="badge">Reference</span>
+						<span class="badge">Rules</span>
+					</div>
+				</section>
+
+				<div class="grid">
+					<div class="span-8">
+
+						<section class="panel rpg-guide-section">
+							<h2>What Is SImps?</h2>
+							<p>SImps is an improv-adjacent tabletop RPG universe built from years of shows, bits, characters, and collaborative nonsense. The wiki documents this universe: every character who has appeared, every faction that has formed, every arena that has been used or theorized about. It is both a reference document and a continuity emergency.</p>
+							<p>The game runs on vibes, escalating commitment, and the collective memory of everyone who has ever watched or performed a SImps set. There are rules below. The rules are suggestions. The power ranking is law.</p>
+						</section>
+
+						<section class="panel rpg-guide-section">
+							<h2>Core Rules</h2>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">1. The Power Ranking Is Canonical</h3>
+							<p>The power ranking determines who wins a direct confrontation when all else is equal. If #7 fights #34, #7 wins unless the fiction provides a compelling reason otherwise. The GM can override rankings for dramatic purposes, but the override must be narratively earned. "I just feel like it" does not override the ranking.</p>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">2. Context Changes Everything</h3>
+							<p>The ranking reflects general power. Specific contexts shift outcomes. Detective Steven ranks #5 only in Christmas-saving mode. Tommy the Rattlesnake ranks #31 only if Mirage is real. Always check the entry page for context modifiers before running an encounter.</p>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">3. Stat Blocks Are Guidance, Not Gospel</h3>
+							<p>Every entry has a stat block with six stats: PWR, CHO, MEN, VIB, WIT, and BIT. These are generated deterministically from the entry's slug and adjusted by category and rank. They provide a framework. Edit them on any entry page if the canon requires different numbers — changes sync to all visitors.</p>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">4. Gangs Act As One</h3>
+							<p>When a faction enters an encounter, use the highest individual rank within that faction as the effective rank. Gang members contribute their stat bonuses collectively. The Volcano 4 Beings fighting together use #13 (Tony Stony) as their floor and combine punch, stare, stomp, and dance outputs.</p>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">5. Arena Matters</h3>
+							<p>Arenas are not neutral. Running a fight in the Water Goblin Kingdom (Underwater) disadvantages anything that can't breathe water. The Apple Police arena is home turf for law enforcement entities. When rolling an arena, treat its environmental properties as active constraints, not decoration.</p>
+
+							<h3 style="color:var(--gold);margin-top:1.25rem">6. Community Entries Are Canon Until Voted Out</h3>
+							<p>Entries added via the "+ Add Entry" button are immediately part of the wiki and can affect the power ranking. Anyone can add, edit, or delete community entries. Community entries display a "Community added" badge. If the table disagrees with a community entry, resolve it in-session and then update the wiki to match.</p>
+						</section>
+
+						<section class="panel rpg-guide-section">
+							<h2>The Six Stats</h2>
+							<p>Every entity in the wiki has six stats ranging from 1–20, plus a modifier calculated as <code>(stat − 10) ÷ 2</code>, rounded down.</p>
+							<div class="stat-legend">
+								<div class="stat-legend-item">
+									<strong>PWR — Power</strong>
+									<span>Raw physical force, strength, and direct combat capability. High PWR wins slugfests.</span>
+								</div>
+								<div class="stat-legend-item">
+									<strong>CHO — Chaos</strong>
+									<span>Unpredictability, disruption, and entropy generation. High CHO means the encounter goes sideways.</span>
+								</div>
+								<div class="stat-legend-item">
+									<strong>MEN — Menace</strong>
+									<span>Threat presence, psychological weight, and the degree to which the enemy regrets showing up.</span>
+								</div>
+								<div class="stat-legend-item">
+									<strong>VIB — Vibe</strong>
+									<span>Aesthetic authority, crowd energy, and social terrain control. High VIB wins rooms before fights start.</span>
+								</div>
+								<div class="stat-legend-item">
+									<strong>WIT — Wit</strong>
+									<span>Intelligence, planning, and the ability to notice things others miss. High WIT wins long games.</span>
+								</div>
+								<div class="stat-legend-item">
+									<strong>BIT — Bit</strong>
+									<span>Comedy value, narrative significance, and how memorable the encounter will be. BIT does not help you win. BIT makes it worth watching.</span>
+								</div>
+							</div>
+						</section>
+
+						<section class="panel rpg-guide-section">
+							<h2>Power Tiers</h2>
+							<p>The 119 ranked characters are divided into five tiers. Tier determines encounter difficulty scaling and NPC attitude. Below-tier enemies show deference; above-tier enemies treat the encounter as unserious.</p>
+							<table class="tier-table">
+								<thead>
+									<tr><th>Tier</th><th>Ranks</th><th>Description</th></tr>
+								</thead>
+								<tbody>
+									<tr><td><span class="tier-label mythic">Mythic</span></td><td>#1–10</td><td>Gods, world-scale entities, and the structurally important. Encounters are set pieces, not fights.</td></tr>
+									<tr><td><span class="tier-label legendary">Legendary</span></td><td>#11–25</td><td>The genuinely dangerous. Victory is possible but costs something. The party will remember it.</td></tr>
+									<tr><td><span class="tier-label epic">Epic</span></td><td>#26–50</td><td>Formidable opponents. Standard adventuring tier — the kind of encounter the game is designed around.</td></tr>
+									<tr><td><span class="tier-label elite">Elite</span></td><td>#51–80</td><td>Competent and motivated. Not pushover material. Run well, they punch above their tier.</td></tr>
+									<tr><td><span class="tier-label standard">Standard</span></td><td>#81–119</td><td>Still ranked. Still in the wiki. The floor of "something worth documenting."</td></tr>
+								</tbody>
+							</table>
+						</section>
+
+						<section class="panel rpg-guide-section">
+							<h2>Running an Encounter</h2>
+							<ol style="line-height:1.85;padding-left:1.5rem">
+								<li>Roll or choose an arena using the <strong>Roll an arena</strong> button on the home page. Apply its environmental rules.</li>
+								<li>Roll or choose a character using <strong>Roll a character</strong>. Check their power tier and context modifiers.</li>
+								<li>Compare stat blocks. The entity with the higher relevant stat wins the stat contest — but the GM describes how.</li>
+								<li>BIT determines how the scene is remembered. High BIT = canonically funny. Low BIT = just a fight.</li>
+								<li>Update the wiki after the session. Add lore to entry pages. Note what happened in GM notes. The wiki is a living document.</li>
+							</ol>
+						</section>
+
+					</div>
+
+					<aside class="span-4">
+						<section class="panel">
+							<h3>Browse the categories</h3>
+							<div class="category-cards">
+								<a class="category-card" href="../pages/categories/power-ranking.html">
+									<strong>Power Ranking</strong>
+									<span>119 ranked characters. The hierarchy.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/creatures.html">
+									<strong>Creatures</strong>
+									<span>Beasts, spirits, and biological miscalculations.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/gangs.html">
+									<strong>Gangs &amp; Factions</strong>
+									<span>23 documented groups and councils.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/objects.html">
+									<strong>Objects &amp; Relics</strong>
+									<span>Artifacts, weapons, cursed props.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/arenas.html">
+									<strong>Arenas &amp; Locations</strong>
+									<span>69 maps and combat settings.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/metaverse.html">
+									<strong>Metaverse Variants</strong>
+									<span>Alternate selves and cursed doubles.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/events.html">
+									<strong>Events</strong>
+									<span>Timeline anchors and continuity breaks.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/kids.html">
+									<strong>Kids</strong>
+									<span>Small. Not harmless.</span>
+								</a>
+								<a class="category-card" href="../pages/categories/smartest.html">
+									<strong>Smartest Characters</strong>
+									<span>The formally identified brain trust.</span>
+								</a>
+							</div>
+						</section>
+
+						<section class="panel" style="margin-top:1rem">
+							<h3>Quick reference</h3>
+							<table class="meta-table">
+								<tr><th>Total pages</th><td>390+</td></tr>
+								<tr><th>Ranked characters</th><td>119</td></tr>
+								<tr><th>Factions</th><td>23</td></tr>
+								<tr><th>Arenas</th><td>69</td></tr>
+								<tr><th>Stats per entity</th><td>6 (PWR/CHO/MEN/VIB/WIT/BIT)</td></tr>
+								<tr><th>Tiers</th><td>5 (Mythic → Standard)</td></tr>
+							</table>
+						</section>
+
+						<section class="panel" style="margin-top:1rem">
+							<h3>Session prep tools</h3>
+							<div class="dashboard-grid">
+								<button class="big-button" data-roll="character">Roll a character</button>
+								<button class="big-button" data-roll="arena">Roll an arena</button>
+								<button class="big-button" data-roll="object">Roll an object</button>
+								<button class="big-button" data-roll="metaverse">Roll a variant</button>
+							</div>
+							<div class="roll-output" id="roll-output">Roll something to start planning.</div>
+						</section>
+
+						<section class="panel note-panel" style="margin-top:1rem">
+							<h3>GM / personal notes</h3>
+							<textarea id="page-notes" class="page-notes" placeholder="Campaign notes, house rules, ongoing storylines, whatever belongs here."></textarea>
+							<div class="note-hint" id="note-status">Saved locally in your browser.</div>
+						</section>
+					</aside>
+				</div>
+
+				<footer class="site-footer">
+					Built for glorious overclassification, low-level continuity panic, and finding out which arena the Apple Police should fight in next.
+				</footer>
+			</main>
+		</div>
+	</div>
+
+	<div class="overlay" id="search-overlay">
+		<div class="search-modal">
+			<div class="modal-head">
+				<h2>Search the wiki</h2>
+				<button class="icon-button" data-close-overlay aria-label="Close search">×</button>
+			</div>
+			<input class="search-box" id="search-input" type="search" placeholder="Search titles, categories, summaries…">
+			<div class="search-results" id="search-results">
+				<div class="empty-state">Search titles, categories, or summaries.</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="overlay" id="help-overlay">
+		<div class="help-modal">
+			<div class="modal-head">
+				<h2>Keyboard shortcuts</h2>
+				<button class="icon-button" data-close-overlay aria-label="Close shortcuts">×</button>
+			</div>
+			<div class="help-grid">
+				<div class="card"><strong><kbd>Ctrl</kbd> + <kbd>K</kbd></strong><p>Open search</p></div>
+				<div class="card"><strong><kbd>/</kbd></strong><p>Focus search quickly</p></div>
+				<div class="card"><strong><kbd>B</kbd></strong><p>Bookmark current page</p></div>
+				<div class="card"><strong><kbd>R</kbd></strong><p>Random page</p></div>
+				<div class="card"><strong><kbd>?</kbd></strong><p>Open this help panel</p></div>
+				<div class="card"><strong><kbd>Esc</kbd></strong><p>Close overlays or mobile nav</p></div>
+			</div>
+		</div>
+	</div>
+
+	<script src="../assets/app.js"></script>
+</body>
+</html>
