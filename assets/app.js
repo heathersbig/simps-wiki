@@ -273,29 +273,43 @@ const FIREBASE_CONFIG = {
 		}).join('');
 	}
 
-	// ─── Firebase lore sync ───────────────────────────────────────────────────
-	let firebaseDB = null;
-	async function initFirebase(){
-		if(!FIREBASE_CONFIG) return;
+	// ─── Firebase REST API sync ──────────────────────────────────────────────
+	// Uses the Realtime Database REST API — no SDK needed, works everywhere.
+	const DB_URL = FIREBASE_CONFIG
+		? (FIREBASE_CONFIG.databaseURL || `https://${FIREBASE_CONFIG.projectId}-default-rtdb.firebaseio.com`)
+		: null;
+
+	async function initFirebase(){ /* no-op — REST API needs no init */ }
+
+	async function firebaseGet(path){
+		if(!DB_URL) return null;
 		try{
-			const app = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
-			const db = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
-			const fireApp = app.initializeApp(FIREBASE_CONFIG);
-			firebaseDB = { db: db.getDatabase(fireApp), ref: db.ref, set: db.set, onValue: db.onValue };
-		}catch(e){
-			console.warn('Firebase init failed, falling back to localStorage:', e);
-		}
+			const r = await fetch(`${DB_URL}/${path}.json`);
+			return r.ok ? r.json() : null;
+		}catch{ return null; }
 	}
 
 	async function firebaseSet(path, value){
-		if(!firebaseDB) return;
-		await firebaseDB.set(firebaseDB.ref(firebaseDB.db, path), value);
+		if(!DB_URL) return;
+		await fetch(`${DB_URL}/${path}.json`, {
+			method:'PUT',
+			headers:{'Content-Type':'application/json'},
+			body:JSON.stringify(value),
+		});
 	}
 
 	function firebaseListen(path, callback){
-		if(!firebaseDB) return;
-		const r = firebaseDB.ref(firebaseDB.db, path);
-		firebaseDB.onValue(r, snap => callback(snap.val()));
+		if(!DB_URL) return;
+		// Server-Sent Events gives real-time push updates from Firebase REST API
+		const es = new EventSource(`${DB_URL}/${path}.json`);
+		es.addEventListener('put', e => {
+			try{ callback(JSON.parse(e.data).data); }catch{}
+		});
+		es.onerror = () => {
+			es.close();
+			// Fall back to polling every 15 s if SSE fails
+			setInterval(async () => { callback(await firebaseGet(path)); }, 15000);
+		};
 	}
 
 	// ─── Default entry descriptions ──────────────────────────────────────────
@@ -800,7 +814,7 @@ const FIREBASE_CONFIG = {
 				const val = textarea.value;
 				currentContent = val;
 				localStorage.setItem(localKey, val);
-				if(firebaseDB){
+				if(DB_URL){
 					try{
 						await firebaseSet(`entries/${slug}/lore`, val);
 						await firebaseSet(`entries/${slug}/editedAt`, Date.now());
@@ -817,7 +831,7 @@ const FIREBASE_CONFIG = {
 
 		// Load content: prefer Firebase, fall back to localStorage
 		(async () => {
-			if(firebaseDB){
+			if(DB_URL){
 				syncStatus.textContent = '● live';
 				firebaseListen(`entries/${slug}/lore`, val => {
 					currentContent = val || '';
@@ -850,6 +864,11 @@ const FIREBASE_CONFIG = {
 	}
 
 	async function goRandom(kind){
+		if(els.rollOutput && kind){
+			els.rollOutput.classList.add('rolling');
+			els.rollOutput.textContent = '⚄ Rolling…';
+			setTimeout(() => els.rollOutput && els.rollOutput.classList.remove('rolling'), 1200);
+		}
 		await loadData();
 		let pool = pageIndex.filter(p => p.type === 'entry');
 		if(kind && siteData.entries){
@@ -1038,18 +1057,6 @@ const FIREBASE_CONFIG = {
 				}
 			}
 		}
-	}
-
-	// Wrap goRandom to add roll animation
-	const _goRandom = goRandom;
-	async function goRandom(kind){
-		const out = els.rollOutput;
-		if(out && kind){
-			out.classList.add('rolling');
-			out.textContent = '⚄ Rolling…';
-			setTimeout(() => out.classList.remove('rolling'), 1200);
-		}
-		await _goRandom(kind);
 	}
 
 	initTheme();
