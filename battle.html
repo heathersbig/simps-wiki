@@ -241,7 +241,7 @@
       <a href="./index.html">← Back to Wiki</a>
       <h1>SImps Battler</h1>
       <p>Choose a fighter. Face your friend. Settle the ranking.</p>
-      <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem;opacity:.5">v2 — fixed connection</p>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem;opacity:.5">v3 — stun servers + timeout</p>
     </div>
     <div class="lobby-inner">
       <div class="card lobby-card">
@@ -271,7 +271,8 @@
       <p style="color:var(--muted);font-size:.85rem;margin:0">
         Waiting for opponent<span class="dots"><span>.</span><span>.</span><span>.</span></span>
       </p>
-      <div style="margin-top:1.5rem">
+      <p id="wait-status" style="color:var(--muted);font-size:.75rem;margin:.5rem 0 0;min-height:1.2em;opacity:.7"></p>
+      <div style="margin-top:1rem">
         <button class="btn btn-outline btn-sm" id="btn-copy-code">Copy code</button>
         &nbsp;
         <button class="btn btn-sm" style="background:var(--bg-elev-2);border:1px solid var(--line);color:var(--muted)" id="btn-cancel-wait">Cancel</button>
@@ -515,6 +516,17 @@ function specialName(name) {
   return 'Ultimate Strike 💥';
 }
 
+// ── PeerJS config ─────────────────────────────────────────────────────────────
+const PEER_CFG = {
+  config: {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ]
+  }
+};
+
 // ── Game state ────────────────────────────────────────────────────────────────
 const G = {
   peer: null, conn: null, isHost: false,
@@ -538,7 +550,7 @@ function showScreen(id) {
 // ── Lobby ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-host').addEventListener('click', () => {
   G.isHost = true;
-  const peer = new Peer();
+  const peer = new Peer(undefined, PEER_CFG);
   G.peer = peer;
   peer.on('error', err => alert('PeerJS error: ' + err.message));
   peer.on('open', id => {
@@ -559,17 +571,28 @@ document.getElementById('btn-join').addEventListener('click', () => {
   const code = document.getElementById('join-code').value.trim();
   if (!code) { alert('Enter a room code first.'); return; }
   G.isHost = false;
-  const peer = new Peer();
+  const peer = new Peer(undefined, PEER_CFG);
   G.peer = peer;
   peer.on('error', err => alert('PeerJS error: ' + err.message));
   peer.on('open', () => {
-    const conn = peer.connect(code);
+    const conn = peer.connect(code, { reliable: true });
     G.conn = conn;
     document.getElementById('room-code-display').textContent = '…';
     document.getElementById('wait-label').textContent = 'Connecting to host…';
+    document.getElementById('wait-status').textContent = 'Establishing WebRTC connection…';
     showScreen('wait');
     setupConn(conn);
-    conn.on('open', () => startCharSelect());
+
+    const timeout = setTimeout(() => {
+      if (G.phase === 'wait') {
+        document.getElementById('wait-status').textContent = '⚠️ Connection timed out. Check the code and try again.';
+      }
+    }, 15000);
+
+    conn.on('open', () => {
+      clearTimeout(timeout);
+      startCharSelect();
+    });
   });
 });
 
