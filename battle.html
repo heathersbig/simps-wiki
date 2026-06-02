@@ -241,6 +241,7 @@
       <a href="./index.html">← Back to Wiki</a>
       <h1>SImps Battler</h1>
       <p>Choose a fighter. Face your friend. Settle the ranking.</p>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem;opacity:.5">v2 — fixed connection</p>
     </div>
     <div class="lobby-inner">
       <div class="card lobby-card">
@@ -548,11 +549,9 @@ document.getElementById('btn-host').addEventListener('click', () => {
   peer.on('connection', conn => {
     G.conn = conn;
     setupConn(conn);
-    // send 'connected' to guest so they know we're linked
-    conn.on('open', () => {
-      conn.send({ type: 'connected' });
-      startCharSelect();
-    });
+    const proceed = () => startCharSelect();
+    if (conn.open) proceed();
+    else conn.on('open', proceed);
   });
 });
 
@@ -570,6 +569,7 @@ document.getElementById('btn-join').addEventListener('click', () => {
     document.getElementById('wait-label').textContent = 'Connecting to host…';
     showScreen('wait');
     setupConn(conn);
+    conn.on('open', () => startCharSelect());
   });
 });
 
@@ -601,9 +601,7 @@ function setupConn(conn) {
 }
 
 function handleMessage(msg) {
-  if (msg.type === 'connected') {
-    startCharSelect();
-  } else if (msg.type === 'charPicked') {
+  if (msg.type === 'charPicked') {
     G.oppChar = msg.charIndex;
     updateCharsStatus();
     maybeStartBattle();
