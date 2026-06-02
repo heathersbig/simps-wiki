@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SImps Battler · SImps TTRPG Wiki</title>
   <link rel="stylesheet" href="./assets/styles.css">
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     body { overflow: auto; }
 
@@ -241,18 +241,26 @@
       <a href="./index.html">← Back to Wiki</a>
       <h1>SImps Battler</h1>
       <p>Choose a fighter. Face your friend. Settle the ranking.</p>
-      <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem;opacity:.5">v3 — stun servers + timeout</p>
+      <p style="font-size:.72rem;color:var(--muted);margin-top:.4rem;opacity:.5">v4 — Supabase Realtime</p>
     </div>
     <div class="lobby-inner">
+      <div class="card lobby-card" style="text-align:left">
+        <h3 style="margin:0 0 .6rem">Supabase Connection</h3>
+        <p style="color:var(--muted);font-size:.78rem;margin:0 0 .75rem">One-time setup: <a href="https://supabase.com" target="_blank">create a free project</a> → Settings → API → copy URL + anon key.</p>
+        <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.25rem">Project URL</label>
+        <input type="text" id="sb-url" class="room-input" placeholder="https://xxxx.supabase.co" style="font-size:.82rem;letter-spacing:0;text-align:left;margin-bottom:.5rem">
+        <label style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.25rem">Anon Key</label>
+        <input type="password" id="sb-key" class="room-input" placeholder="eyJ…" style="font-size:.82rem;letter-spacing:0;text-align:left">
+      </div>
       <div class="card lobby-card">
         <h3>Host a Game</h3>
-        <p style="color:var(--muted);font-size:.85rem;margin:0 0 1rem">Create a room and share the code with your opponent.</p>
+        <p style="color:var(--muted);font-size:.85rem;margin:0 0 1rem">Create a room and share the 6-letter code.</p>
         <button class="btn btn-gold" id="btn-host" style="width:100%">Create Room</button>
       </div>
       <div class="or-divider">OR</div>
       <div class="card lobby-card">
         <h3>Join a Game</h3>
-        <input type="text" id="join-code" class="room-input" placeholder="ENTER CODE" maxlength="40" spellcheck="false">
+        <input type="text" id="join-code" class="room-input" placeholder="ENTER CODE" maxlength="6" spellcheck="false" style="text-transform:uppercase">
         <button class="btn btn-outline" id="btn-join" style="width:100%">Join Room</button>
       </div>
     </div>
@@ -516,20 +524,27 @@ function specialName(name) {
   return 'Ultimate Strike 💥';
 }
 
-// ── PeerJS config ─────────────────────────────────────────────────────────────
-const PEER_CFG = {
-  config: {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-      { urls: 'stun:stun2.l.google.com:19302' },
-    ]
-  }
-};
+// ── Supabase ──────────────────────────────────────────────────────────────────
+let sb = null;
+let ch = null;
+let guestRetry = null;
+
+function getSB() {
+  const url = (localStorage.getItem('sb-url') || '').trim();
+  const key = (localStorage.getItem('sb-key') || '').trim();
+  if (!url || !key) return null;
+  if (!sb) sb = window.supabase.createClient(url, key);
+  return sb;
+}
+
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
 
 // ── Game state ────────────────────────────────────────────────────────────────
 const G = {
-  peer: null, conn: null, isHost: false,
+  isHost: false, roomCode: '',
   myChar: null, oppChar: null,
   myStats: null, oppStats: null,
   myHp: 0, oppHp: 0,
@@ -537,7 +552,7 @@ const G = {
   myMove: null, oppMove: null,
   heavyCooldown: 0,
   timerInterval: null, timeLeft: 15,
-  phase: 'lobby', // lobby | wait | chars | battle | gameover
+  phase: 'lobby',
 };
 
 // ── Screen switching ──────────────────────────────────────────────────────────
@@ -547,84 +562,92 @@ function showScreen(id) {
   G.phase = id;
 }
 
+// ── Credentials ───────────────────────────────────────────────────────────────
+document.getElementById('sb-url').addEventListener('change', e => {
+  localStorage.setItem('sb-url', e.target.value.trim()); sb = null;
+});
+document.getElementById('sb-key').addEventListener('change', e => {
+  localStorage.setItem('sb-key', e.target.value.trim()); sb = null;
+});
+document.getElementById('sb-url').value = localStorage.getItem('sb-url') || '';
+document.getElementById('sb-key').value = localStorage.getItem('sb-key') || '';
+
 // ── Lobby ─────────────────────────────────────────────────────────────────────
 document.getElementById('btn-host').addEventListener('click', () => {
+  if (!getSB()) { alert('Enter your Supabase URL and anon key first.'); return; }
   G.isHost = true;
-  const peer = new Peer(undefined, PEER_CFG);
-  G.peer = peer;
-  peer.on('error', err => alert('PeerJS error: ' + err.message));
-  peer.on('open', id => {
-    document.getElementById('room-code-display').textContent = id;
-    document.getElementById('wait-label').textContent = 'Share this code with your opponent:';
-    showScreen('wait');
-  });
-  peer.on('connection', conn => {
-    G.conn = conn;
-    setupConn(conn);
-    const proceed = () => startCharSelect();
-    if (conn.open) proceed();
-    else conn.on('open', proceed);
-  });
+  G.roomCode = genCode();
+  document.getElementById('room-code-display').textContent = G.roomCode;
+  document.getElementById('wait-label').textContent = 'Share this code with your opponent:';
+  document.getElementById('wait-status').textContent = '';
+  showScreen('wait');
+  joinChannel(G.roomCode);
 });
 
 document.getElementById('btn-join').addEventListener('click', () => {
-  const code = document.getElementById('join-code').value.trim();
+  const code = document.getElementById('join-code').value.trim().toUpperCase();
   if (!code) { alert('Enter a room code first.'); return; }
+  if (!getSB()) { alert('Enter your Supabase URL and anon key first.'); return; }
   G.isHost = false;
-  const peer = new Peer(undefined, PEER_CFG);
-  G.peer = peer;
-  peer.on('error', err => alert('PeerJS error: ' + err.message));
-  peer.on('open', () => {
-    const conn = peer.connect(code, { reliable: true });
-    G.conn = conn;
-    document.getElementById('room-code-display').textContent = '…';
-    document.getElementById('wait-label').textContent = 'Connecting to host…';
-    document.getElementById('wait-status').textContent = 'Establishing WebRTC connection…';
-    showScreen('wait');
-    setupConn(conn);
-
-    const timeout = setTimeout(() => {
-      if (G.phase === 'wait') {
-        document.getElementById('wait-status').textContent = '⚠️ Connection timed out. Check the code and try again.';
-      }
-    }, 15000);
-
-    conn.on('open', () => {
-      clearTimeout(timeout);
-      startCharSelect();
-    });
-  });
+  G.roomCode = code;
+  document.getElementById('room-code-display').textContent = code;
+  document.getElementById('wait-label').textContent = 'Connecting…';
+  document.getElementById('wait-status').textContent = 'Waiting for host to respond…';
+  showScreen('wait');
+  joinChannel(code);
 });
 
 document.getElementById('btn-copy-code').addEventListener('click', () => {
-  const code = document.getElementById('room-code-display').textContent;
-  navigator.clipboard.writeText(code).then(() => {
+  navigator.clipboard.writeText(G.roomCode).then(() => {
     document.getElementById('btn-copy-code').textContent = 'Copied!';
     setTimeout(() => document.getElementById('btn-copy-code').textContent = 'Copy code', 2000);
   });
 });
 
 document.getElementById('btn-cancel-wait').addEventListener('click', () => {
-  if (G.peer) { G.peer.destroy(); G.peer = null; }
-  G.conn = null;
+  leaveChannel();
   showScreen('lobby');
 });
 
-// ── Connection setup ──────────────────────────────────────────────────────────
-function setupConn(conn) {
-  conn.on('data', handleMessage);
-  conn.on('close', () => {
-    if (G.phase === 'battle' || G.phase === 'chars') {
-      clearInterval(G.timerInterval);
-      alert('Opponent disconnected.');
-      resetToLobby();
-    }
+// ── Channel ───────────────────────────────────────────────────────────────────
+function joinChannel(roomCode) {
+  ch = getSB().channel('simps-battle:' + roomCode, {
+    config: { broadcast: { self: false } }
   });
-  conn.on('error', err => console.error('conn error', err));
+  ch.on('broadcast', { event: 'msg' }, ({ payload }) => handleMessage(payload))
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') onChannelReady();
+    });
 }
 
+function onChannelReady() {
+  if (!G.isHost) {
+    sendMsg({ type: 'guest_joined' });
+    guestRetry = setInterval(() => {
+      if (G.phase === 'wait') sendMsg({ type: 'guest_joined' });
+      else clearInterval(guestRetry);
+    }, 2000);
+  }
+}
+
+function sendMsg(data) {
+  if (ch) ch.send({ type: 'broadcast', event: 'msg', payload: data });
+}
+
+function leaveChannel() {
+  clearInterval(guestRetry);
+  if (ch && sb) { sb.removeChannel(ch); ch = null; }
+}
+
+// ── Messages ──────────────────────────────────────────────────────────────────
 function handleMessage(msg) {
-  if (msg.type === 'charPicked') {
+  if (msg.type === 'guest_joined' && G.isHost) {
+    sendMsg({ type: 'host_ack' });
+    if (G.phase === 'wait') startCharSelect();
+  } else if (msg.type === 'host_ack' && !G.isHost) {
+    clearInterval(guestRetry);
+    if (G.phase === 'wait') startCharSelect();
+  } else if (msg.type === 'charPicked') {
     G.oppChar = msg.charIndex;
     updateCharsStatus();
     maybeStartBattle();
@@ -638,9 +661,7 @@ function handleMessage(msg) {
   }
 }
 
-function send(data) {
-  if (G.conn && G.conn.open) G.conn.send(data);
-}
+function send(data) { sendMsg(data); }
 
 // ── Character select ──────────────────────────────────────────────────────────
 let myCharSelection = null;
@@ -910,8 +931,7 @@ document.getElementById('btn-lobby').addEventListener('click', resetToLobby);
 
 function resetToLobby() {
   clearInterval(G.timerInterval);
-  if (G.conn)  { G.conn.close();  G.conn  = null; }
-  if (G.peer)  { G.peer.destroy(); G.peer = null; }
+  leaveChannel();
   G.myChar = null; G.oppChar = null;
   document.getElementById('btn-confirm-char').disabled = true;
   document.getElementById('btn-confirm-char').textContent = 'Confirm Fighter';
